@@ -1,14 +1,19 @@
-type foo = [ `Foo of foo ]
-type foo_bar = [ `Foo of foo_bar | `Bar ]
+type foo = [ `Foo ]
+type foo_bar = [ `Foo | `Bar ]
+
+let f x = (x : foo list :> foo_bar list)
+
+(* This is an example of *contravariance* *)
+let higher_order (f : foo_bar -> 'a) = (f : foo_bar -> 'a :> foo -> 'a) `Foo
+
+let _ = higher_order (function `Foo -> 5 | `Bar -> 6)
+
+(* let g x = (x : foo_bar ref :> foo ref) *)
 
 module M : sig
-  (* INVARIANT: t is positive *)
-  type t = private int
-  val mk : int -> t
+  type (-'a, +'b) t
 end = struct
-  type t = int
-  let mk x =
-    if x > 0 then x else raise (Invalid_argument "negative")
+  type ('a, 'b) t = 'a -> 'b
 end
 
-let f x = (x : int :> M.t)
+let g x = (x : (foo_bar, foo) M.t :> (foo, foo_bar) M.t)
